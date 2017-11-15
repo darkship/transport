@@ -1,6 +1,7 @@
+use std::io;
 
 pub trait Endpoint{
-    fn read(&self);
+    fn read(&self, buf: &mut [u8]) -> io::Result<usize>;
     fn write(&self);
 }
 
@@ -10,13 +11,15 @@ pub struct Transport<F: Endpoint, T: Endpoint> {
 }
 
 impl <F: Endpoint, T: Endpoint> Transport<F, T> {
-    pub fn forward (&self) -> Result<bool, &str>{
-        self.from.read();
+    pub fn forward (&self) -> Result<(), std::io::Error>{
+        let mut buff = [0; 1024];
+        self.from.read(&mut buff[..])?;
         self.to.write();
-        Ok(true)
+        Ok(())
     }
-    pub fn backward (&self) -> Result<bool, &str>{
-        self.to.read();
+    pub fn backward (&self) -> Result<bool, std::io::Error>{
+        let mut buff = [0; 1024];
+        self.to.read(&mut buff[..])?;
         self.from.write();
         Ok(true)
     }
@@ -37,7 +40,9 @@ mod tests {
 
     }
     impl Endpoint for TestEndPoint{
-        fn read(&self){}
+        fn read(&self, buf: &mut [u8]) -> io::Result<usize>{
+            Ok(0)
+        }
         fn write(&self){}
     }
     #[test]
@@ -45,7 +50,8 @@ mod tests {
         let start = TestEndPoint{};
         let from = TestEndPoint{};
         let t = new(start, from);
-        assert_eq!(t.forward(), Ok(true));
-        assert_eq!(t.backward(), Ok(true));
+        assert!(t.backward().is_ok());
+        assert!(t.forward().is_ok());
+        
     }
 }
