@@ -1,8 +1,8 @@
 use std::io;
 
 pub trait Endpoint{
-    fn read(&self, buf: &mut [u8]) -> io::Result<usize>;
-    fn write(&self);
+    fn read(&self, buff: &mut [u8]) -> io::Result<usize>;
+    fn write(&self, buff: &[u8]) -> io::Result<usize>;
 }
 
 pub struct Transport<F: Endpoint, T: Endpoint> {
@@ -12,16 +12,35 @@ pub struct Transport<F: Endpoint, T: Endpoint> {
 
 impl <F: Endpoint, T: Endpoint> Transport<F, T> {
     pub fn forward (&self) -> Result<(), std::io::Error>{
-        let mut buff = [0; 1024];
-        self.from.read(&mut buff[..])?;
-        self.to.write();
-        Ok(())
+        return self.copy(&self.from, &self.to)
     }
-    pub fn backward (&self) -> Result<bool, std::io::Error>{
+    pub fn backward (&self) -> Result<(), std::io::Error>{
+       return self.copy(&self.to, &self.from)
+    }
+
+    fn copy(&self, from:&Endpoint, to:&Endpoint)-> Result<(), std::io::Error>{
         let mut buff = [0; 1024];
-        self.to.read(&mut buff[..])?;
-        self.from.write();
-        Ok(true)
+        let mut reading = true;
+        while reading {
+            match from.read(&mut buff) {
+                Err(error) => {
+                    return Err(error)
+                },
+                Ok(a) => {
+                    if a == 0{
+                        reading = false
+                    } else {
+                        match to.write(&mut buff){
+                            Err(error) => {
+                                return Err(error)
+                            },
+                            Ok(_) =>{}
+                        }
+                    }
+                },
+            }
+        }
+        Ok(())
     }
 }
 
@@ -40,10 +59,14 @@ mod tests {
 
     }
     impl Endpoint for TestEndPoint{
-        fn read(&self, buf: &mut [u8]) -> io::Result<usize>{
+        #[allow(unused)]
+        fn read(&self, buff: &mut [u8]) -> io::Result<usize>{
             Ok(0)
         }
-        fn write(&self){}
+        #[allow(unused)]
+        fn write(&self, buff: &[u8]) -> io::Result<usize>{
+            Ok(0)
+        }
     }
     #[test]
     fn it_works() {
