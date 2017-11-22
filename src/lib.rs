@@ -2,20 +2,23 @@ use std::io;
 mod endpoint;
 mod file;
 
-pub struct Transport<F: endpoint::Endpoint, T: endpoint::Endpoint> {
-    from: F,
-    to: T,
+pub struct Transport<'a,F: 'a + endpoint::Endpoint, T: 'a + endpoint::Endpoint> {
+    from: &'a mut F,
+    to: &'a mut T,
 }
 
-impl <F: endpoint::Endpoint, T: endpoint::Endpoint> Transport<F, T> {
+impl <'a,F: 'a + endpoint::Endpoint, T: 'a + endpoint::Endpoint> Transport<'a,F, T> {
     pub fn forward (&self) -> Result<(), std::io::Error>{
-        return self.copy(&self.from, &self.to)
+        return copy(&'a self.from, &'a mut self.to)
     }
     pub fn backward (&self) -> Result<(), std::io::Error>{
-       return self.copy(&self.to, &self.from)
+       return copy(&self.to, &self.from)
     }
 
-    fn copy(&self, from:&endpoint::Endpoint, to:&endpoint::Endpoint)-> Result<(), std::io::Error>{
+    
+}
+
+fn copy<'b>( from:&'b mut endpoint::Endpoint, to: &'b mut endpoint::Endpoint)-> Result<(), std::io::Error>{
         let mut buff = [0; 1024];
         let mut reading = true;
         while reading {
@@ -39,14 +42,13 @@ impl <F: endpoint::Endpoint, T: endpoint::Endpoint> Transport<F, T> {
         }
         Ok(())
     }
-}
 
-pub fn new<F: endpoint::Endpoint, T: endpoint::Endpoint>(from: F, to: T) -> Transport<F,T>{
-    Transport{
-        from: from,
-        to: to
+/*pub fn new<'a,F: 'a + endpoint::Endpoint, T: endpoint::Endpoint>(from: F, to: T) -> Transport<'a, F, T>{
+    Transport<'a, 'a F, 'a T>{
+        from: &'a mut from,
+        to: &'a mut to
     }
-}
+}*/
 
 
 #[cfg(test)]
@@ -57,11 +59,11 @@ mod tests {
     }
     impl endpoint::Endpoint for TestEndPoint{
         #[allow(unused)]
-        fn read(&self, buff: &mut [u8]) -> io::Result<usize>{
+        fn read(&mut self, buff: &mut [u8]) -> io::Result<usize>{
             Ok(0)
         }
         #[allow(unused)]
-        fn write(&self, buff: &[u8]) -> io::Result<usize>{
+        fn write(&mut self, buff: &[u8]) -> io::Result<usize>{
             Ok(0)
         }
     }

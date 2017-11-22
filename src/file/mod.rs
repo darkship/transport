@@ -1,17 +1,18 @@
 
 use super::endpoint;
 use std::io;
+use std::io::Read;
+use std::io::Write;
+use std::fs;
 
-struct File{
-
+struct File<'a>{
+    file : &'a fs::File
 }
-impl endpoint::Endpoint for File{
-    #[allow(unused)]
-    fn read(&self, buff: &mut [u8]) -> io::Result<usize>{
-        Ok(0)
+impl<'a> endpoint::Endpoint for File<'a>{
+    fn read(&mut self, buff: &mut [u8]) -> io::Result<usize>{
+       self.file.read(buff)
     }
-    #[allow(unused)]
-    fn write(&self, buff: &[u8]) -> io::Result<usize>{
-        Ok(0)
+    fn write(&mut self, buff: &[u8]) -> io::Result<usize>{
+        self.file.write(buff)
     }
 }
