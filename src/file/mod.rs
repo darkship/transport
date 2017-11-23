@@ -34,23 +34,21 @@ mod tests {
             
 
             let file = File{
-            file: &fs::File::open("data.test")?
+                file: &fs::File::open(filePath)?
             };
             let mut buff = [0; 10];
-            let mut reading = true;
-            // let mut res = [];
-            // loop {
-            //     let n = file.read(buff)?;
-            //     res = [res[..], ..buff];
-            //     if n==0{
-            //         break;
-            //     }
-            // }
-
-            //assert_eq!(msg, buff);
-
+            let mut i : usize =0;
+            loop {
+                let n = file.read(buff)?;
+                if n==0{
+                    break;
+                }
+                 assert_eq!(msg[i..n], buff);
+            }
+            assert_eq!(msg.len(),i);
             Ok(())
         };
-        let _= v();
+        assert!(v().is_ok());
+
     }
 }
