@@ -28,12 +28,12 @@ mod tests {
     #[test]
     fn reading() {
         let msg = b"Hello, world! \nssss\nsssss\nppppp";
-        let filePath = "./data.test";
+        let file_path = "./data.test";
         let v = || -> io::Result<()> {
-            let mut f = fs::File::create(filePath)?;
-            f.write_all(msg);
+            let mut f = fs::File::create(file_path)?;
+            f.write_all(msg)?;
 
-            let mut f = File { file: &fs::File::open(filePath)? };
+            let mut f = File { file: &fs::File::open(file_path)? };
             let mut buff: [u8; 10] = [0; 10];
             let mut i: usize = 0;
             loop {
@@ -45,7 +45,7 @@ mod tests {
                 i += n
             }
             assert_eq!(msg.len(), i);
-            fs::remove_file(filePath)?;
+            fs::remove_file(file_path)?;
             Ok(())
         };
         assert!(v().is_ok());
