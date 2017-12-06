@@ -1,5 +1,5 @@
 
-use endpoint;
+use endpoint::Endpoint;
 use std::io;
 use std::io::Read;
 use std::io::Write;
@@ -8,7 +8,7 @@ use std::fs;
 pub struct File<'a> {
     file: &'a fs::File,
 }
-impl<'a> endpoint::Endpoint for File<'a> {
+impl<'a> Endpoint for File<'a> {
     fn read(&mut self, buff: &mut [u8]) -> io::Result<usize> {
         self.file.read(buff)
     }
