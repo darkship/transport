@@ -1,4 +1,5 @@
-use std::io;
+use std::io::Error;
+
 pub mod endpoint;
 pub mod file_endpoint;
 pub mod string_endpoint;
@@ -9,7 +10,7 @@ pub struct Transport<'a, F: 'a + endpoint::Endpoint, T: 'a + endpoint::Endpoint>
 }
 
 impl<'a, F: 'a + endpoint::Endpoint, T: 'a + endpoint::Endpoint> Transport<'a, F, T> {
-    pub fn forward(&mut self) -> Result<(), io::Error> {
+    pub fn forward(&mut self) -> Result<(), Error> {
         return copy(self.from, self.to);
     }
 }
@@ -17,7 +18,7 @@ impl<'a, F: 'a + endpoint::Endpoint, T: 'a + endpoint::Endpoint> Transport<'a, F
 fn copy<'a>(
     from: &'a mut dyn endpoint::Endpoint,
     to: &'a mut dyn endpoint::Endpoint,
-) -> Result<(), io::Error> {
+) -> Result<(), Error> {
     let mut buffer = [0; 1024];
     let mut reading = true;
     while reading {
