@@ -92,13 +92,13 @@ mod tests {
                 }
                 Ok(_) => {
                     let mut file = &fs::File::open(file_path)?;
-                    let mut contents = String::new();
-                    file.read_to_string(&mut contents)?;
+                    let mut result_content = String::new();
+                    file.read_to_string(&mut result_content)?;
                     assert!(
-                        contents == msg,
+                        result_content == msg,
                         "expected '{}' but got '{}'.",
                         msg,
-                        contents
+                        result_content
                     );
                     fs::remove_file(file_path)?;
                 }
@@ -137,6 +137,45 @@ mod tests {
                         expected_msg,
                         msg
                     );
+                }
+            };
+
+            Ok(())
+        };
+
+        assert!(v().is_ok());
+    }
+
+    #[test]
+    fn from_file_to_file() {
+        let from_file_path = "./from_file_to_file.test";
+        let to_file_path = "./from_file_to_file_destination.test";
+        let v = || -> io::Result<()> {
+            let from_file = &fs::File::open(from_file_path)?;
+            let mut from_file_endpoint = file_endpoint::new(from_file);
+
+            let to_file = &fs::File::create(to_file_path)?;
+            let mut to_file_endpoint = file_endpoint::new(to_file);
+
+            let mut t = new(&mut from_file_endpoint, &mut to_file_endpoint);
+            match t.forward() {
+                Err(error) => {
+                    println!("error: {}", error);
+                    assert!(false);
+                }
+                Ok(_) => {
+                    let mut expected_content = String::new();
+                    let mut from_file = &fs::File::open(from_file_path)?;
+                    from_file.read_to_string(&mut expected_content)?;
+
+                    let mut file_result = &fs::File::open(to_file_path)?;
+                    let mut result_content = String::new();
+                    file_result.read_to_string(&mut result_content)?;
+
+                    assert!(
+                        expected_content == result_content,
+                    );
+                    fs::remove_file(to_file_path)?;
                 }
             };
 
