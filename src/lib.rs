@@ -4,20 +4,20 @@ pub mod endpoint;
 pub mod file_endpoint;
 pub mod string_endpoint;
 
-pub struct Transport<'a, F: 'a + endpoint::Endpoint, T: 'a + endpoint::Endpoint> {
+pub struct Transport<'a, F: 'a + endpoint::EndpointFrom, T: 'a + endpoint::EndpointTo> {
     from: &'a mut F,
     to: &'a mut T,
 }
 
-impl<'a, F: 'a + endpoint::Endpoint, T: 'a + endpoint::Endpoint> Transport<'a, F, T> {
+impl<'a, F: 'a + endpoint::EndpointFrom, T: 'a + endpoint::EndpointTo> Transport<'a, F, T> {
     pub fn forward(&mut self) -> Result<(), Error> {
         return copy(self.from, self.to);
     }
 }
 
 fn copy<'a>(
-    from: &'a mut dyn endpoint::Endpoint,
-    to: &'a mut dyn endpoint::Endpoint,
+    from: &'a mut dyn endpoint::EndpointFrom,
+    to: &'a mut dyn endpoint::EndpointTo,
 ) -> Result<(), Error> {
     let mut buffer = [0; 1024];
     let mut reading = true;
@@ -39,7 +39,7 @@ fn copy<'a>(
     Ok(())
 }
 
-pub fn new<'a, F: 'a + endpoint::Endpoint, T: 'a + endpoint::Endpoint>(
+pub fn new<'a, F: 'a + endpoint::EndpointFrom, T: 'a + endpoint::EndpointTo>(
     from: &'a mut F,
     to: &'a mut T,
 ) -> Transport<'a, F, T> {
@@ -54,16 +54,21 @@ mod tests {
     use std::io::prelude::*;
 
     struct TestEndPoint {}
-    impl endpoint::Endpoint for TestEndPoint {
+
+    impl endpoint::EndpointFrom for TestEndPoint {
         #[allow(unused)]
         fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
             Ok(0)
         }
+    }
+
+    impl endpoint::EndpointTo for TestEndPoint {
         #[allow(unused)]
         fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
             Ok(0)
         }
     }
+
     #[test]
     fn it_works() {
         let mut from = TestEndPoint {};
