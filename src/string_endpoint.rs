@@ -24,7 +24,7 @@ impl<'a> EndpointFrom for StringEndpoint<'a> {
 
 impl<'a> EndpointTo for StringEndpoint<'a> {
     fn write(&mut self, buffer: &[u8]) -> Result<usize> {
-        let new_str = String::from_utf8(buffer.to_vec()).unwrap_or("".to_string());
+        let new_str = String::from_utf8(buffer.to_vec()).unwrap();
         self.string.push_str(&new_str);
         Ok(buffer.len())
     }
